@@ -136,9 +136,10 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;pad
       <div class="row">
         <label for="newT">Название<input id="newT" required placeholder="напр. Бруски"></label>
       </div>
+      <label for="newA">Автор, год<input id="newA" placeholder="Фёдор Панфёров, 1928"></label>
       <div class="row">
-        <label for="newA">Автор, год<input id="newA" placeholder="Фёдор Панфёров, 1928"></label>
-        <label for="newP" style="flex:0 0 110px;min-width:0">Страниц<input id="newP" type="number" min="10" placeholder="400"></label>
+        <label for="newS">С стр.<input id="newS" type="number" min="1" placeholder="1"></label>
+        <label for="newE">По стр.<input id="newE" type="number" min="1" placeholder="400"></label>
       </div>
       <button type="submit">Добавить книгу в конец списка</button>
     </form>
@@ -158,9 +159,11 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;pad
     <details>
       <summary>Настройки и резервная копия</summary>
       <form id="setForm">
+        <label for="goalIn">Норма, стр. в день<input id="goalIn" type="number" min="5" max="300"></label>
+        <p class="note" style="margin:6px 0 0">Текущая книга в вашем издании (если это сборник — укажите страницы именно этого произведения):</p>
         <div class="row">
-          <label for="goalIn">Норма, стр. в день<input id="goalIn" type="number" min="5" max="300"></label>
-          <label for="totalIn">Страниц в текущей книге<input id="totalIn" type="number" min="10"></label>
+          <label for="startIn">Начинается со стр.<input id="startIn" type="number" min="1"></label>
+          <label for="endIn">Заканчивается на стр.<input id="endIn" type="number" min="1"></label>
         </div>
         <button type="submit">Сохранить настройки</button>
       </form>
@@ -196,9 +199,11 @@ const DEF_BOOKS=[
  ["Тихий Дон","Михаил Шолохов, 1940",1500]
 ];
 const uid=()=>Math.random().toString(36).slice(2,9);
-function fresh(){return{goal:35,page:null,books:DEF_BOOKS.map(([t,a,p])=>({id:uid(),t,a,p,fin:null})),log:{}}}
+function fresh(){return{goal:35,page:null,books:DEF_BOOKS.map(([t,a,p])=>({id:uid(),t,a,s:1,e:p,fin:null})),log:{}}}
+function migrate(d){(d.books||[]).forEach(b=>{if(b.s==null){b.s=1;b.e=b.p||300}delete b.p});return d}
+const len=b=>Math.max(1,b.e-b.s+1);
 let S;
-try{S=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){S=fresh()}
+try{S=migrate(JSON.parse(localStorage.getItem(KEY))||fresh())}catch(e){S=fresh()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){msg("Не удалось сохранить в памяти телефона.")}}
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 
@@ -214,15 +219,16 @@ function render(){
   const b=cur(),e=S.log[today];
   if(b){
     $("bookTitle").textContent="«"+b.t+"»";$("bookAuthor").textContent=b.a||"";
-    $("pageNow").textContent=S.page==null?"страница не указана":"стр. "+S.page;
-    $("pageTotal").textContent="из "+b.p;
-    $("barFill").style.width=S.page?Math.min(100,S.page/b.p*100)+"%":"0";
-    const base=e&&e.startPage!=null?e.startPage:(S.page||0);
+    const done=S.page==null?0:Math.max(0,S.page-b.s+1);
+    $("pageNow").textContent=S.page==null?"страница не указана":"стр. "+S.page+" · прочитано "+Math.min(done,len(b))+" из "+len(b);
+    $("pageTotal").textContent="стр. "+b.s+"–"+b.e;
+    $("barFill").style.width=Math.min(100,done/len(b)*100)+"%";
+    const base=e&&e.startPage!=null?e.startPage:(S.page==null?b.s-1:S.page);
     $("goalLine").innerHTML=S.page==null
-      ?"Укажите страницу, на которой вы сейчас, и нажмите «Отметить прочитанное»."
-      :"Норма: <b>"+S.goal+" стр.</b> — до стр. <b>"+Math.min(b.p,base+S.goal)+"</b> · до конца книги ≈ "+Math.ceil(Math.max(0,b.p-S.page)/S.goal)+" дн.";
-    $("stopPage").placeholder=S.page==null?"напр. 74":String(Math.min(b.p,base+S.goal));
-    $("totalIn").value=b.p;
+      ?"Укажите страницу, на которой вы сейчас (номер как в книге), и нажмите «Отметить прочитанное»."
+      :"Норма: <b>"+S.goal+" стр.</b> — до стр. <b>"+Math.min(b.e,base+S.goal)+"</b> · до конца ≈ "+Math.ceil(Math.max(0,b.e-S.page)/S.goal)+" дн.";
+    $("stopPage").placeholder=S.page==null?"напр. "+(b.s+33):String(Math.min(b.e,base+S.goal));
+    $("startIn").value=b.s;$("endIn").value=b.e;
   }else{
     $("bookTitle").textContent="Список прочитан";$("bookAuthor").textContent="Добавьте новые книги ниже.";
     $("pageNow").textContent="";$("pageTotal").textContent="";$("goalLine").textContent="";$("barFill").style.width="100%";
@@ -256,11 +262,11 @@ function render(){
     const sm=document.createElement("small");
     let dt="";
     if(bk.fin){li.className="fin";dt="прочитана "+new Date(bk.fin).toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"2-digit"})}
-    else{acc+=bk===curB?Math.max(0,bk.p-(S.page||0)):bk.p;
+    else{acc+=bk===curB&&S.page!=null?Math.max(0,bk.e-S.page):len(bk);
       const f=new Date(now);f.setDate(f.getDate()+Math.ceil(acc/S.goal));
       dt="≈ "+f.toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"2-digit"});
       if(bk===curB)li.className="cur"}
-    sm.textContent=(bk.a?bk.a+" · ":"")+bk.p+" стр. · ";
+    sm.textContent=(bk.a?bk.a+" · ":"")+len(bk)+" стр."+(bk.s>1?" (с "+bk.s+" по "+bk.e+")":"")+" · ";
     const ds=document.createElement("span");ds.className="d";ds.textContent=dt;sm.appendChild(ds);t.appendChild(sm);
     const acts=document.createElement("div");acts.className="acts";
     const mk=(lbl,aria,fn)=>{const bt=document.createElement("button");bt.type="button";bt.className="ghost";bt.textContent=lbl;bt.setAttribute("aria-label",aria);bt.onclick=fn;acts.appendChild(bt)};
@@ -270,12 +276,12 @@ function render(){
 }
 function move(i,dir){const j=i+dir;if(j<0||j>=S.books.length)return;
   const wasCur=cur();[S.books[i],S.books[j]]=[S.books[j],S.books[i]];
-  if(cur()!==wasCur)S.page=0;save();render()}
+  if(cur()!==wasCur)S.page=null;save();render()}
 let pendingRemove=null;
 function remove(i){const b=S.books[i];
   if(pendingRemove!==b.id){pendingRemove=b.id;msg("Нажмите ✕ ещё раз, чтобы убрать «"+b.t+"».");
     document.querySelector(".today").scrollIntoView({behavior:"smooth"});return}
-  pendingRemove=null;const wasCur=cur()===b;S.books.splice(i,1);if(wasCur)S.page=0;save();render();msg("«"+b.t+"» убрана из списка.")}
+  pendingRemove=null;const wasCur=cur()===b;S.books.splice(i,1);if(wasCur)S.page=null;save();render();msg("«"+b.t+"» убрана из списка.")}
 
 $("readForm").addEventListener("submit",ev=>{ev.preventDefault();
   const b=cur();if(!b)return;
@@ -283,13 +289,15 @@ $("readForm").addEventListener("submit",ev=>{ev.preventDefault();
   if(isNaN(n)){msg("Укажите страницу, на которой остановились.");return}
   const prev=S.log[today]||{};
   if(S.page==null&&prev.startPage==null){S.page=n;save();render();$("stopPage").value="";msg("Записал: сейчас стр. "+n+". Норма считается от неё.");return}
-  const startPage=prev.startPage!=null?prev.startPage:(S.page||0);
+  if(n<b.s-1){msg("В этой книге страницы идут с "+b.s+" по "+b.e+". Укажите номер как в книге или исправьте диапазон в настройках.");return}
+  const startPage=prev.startPage!=null?prev.startPage:(S.page==null?b.s-1:S.page);
   const pages=Math.max(0,n-startPage)+(prev.carry||0);
   const status=pages>=S.goal?"done":"partial";
   let note="";S.page=n;
   const entry={status,pages,startPage,stopPage:n,book:b.t,goal:S.goal};
-  if(n>=b.p){b.fin=Date.now();S.page=0;entry.carry=pages;entry.startPage=0;
-    const nx=cur();note=nx?" «"+b.t+"» дочитана — дальше «"+nx.t+"».":" Список прочитан!"}
+  if(n>=b.e){b.fin=Date.now();entry.carry=pages;
+    const nx=cur();S.page=null;if(nx){S.page=nx.s-1;entry.startPage=S.page}
+    note=nx?" «"+b.t+"» дочитана — дальше «"+nx.t+"». Если в вашем издании она начинается не с 1-й страницы — поправьте в настройках.":" Список прочитан!"}
   S.log[today]=entry;save();render();$("stopPage").value="";
   msg(status==="done"?"Норма выполнена: "+pages+" стр."+note:"Записано "+pages+" стр. До нормы ещё "+(S.goal-pages)+"."+note)});
 $("btnEvening").onclick=()=>{const p=S.log[today];if(p&&p.status==="done"){msg("Сегодня норма уже выполнена.");return}
@@ -298,13 +306,22 @@ $("btnMissed").onclick=()=>{const p=S.log[today];if(p&&p.status==="done"){msg("�
   S.log[today]={...(p||{}),status:"missed",pages:p?p.pages||0:0};save();render();msg("Записан пропуск. Завтра — та же норма.")};
 $("addForm").addEventListener("submit",ev=>{ev.preventDefault();
   const t=$("newT").value.trim();if(!t)return;
-  S.books.push({id:uid(),t,a:$("newA").value.trim(),p:parseInt($("newP").value,10)||300,fin:null});
-  $("newT").value=$("newA").value=$("newP").value="";save();render()});
+  const s=parseInt($("newS").value,10)||1;let e=parseInt($("newE").value,10)||s+299;if(e<s)e=s+299;
+  S.books.push({id:uid(),t,a:$("newA").value.trim(),s,e,fin:null});
+  $("newT").value=$("newA").value=$("newS").value=$("newE").value="";save();render()});
 $("setForm").addEventListener("submit",ev=>{ev.preventDefault();
-  const g=parseInt($("goalIn").value,10),t=parseInt($("totalIn").value,10);
-  if(g>=5)S.goal=g;const b=cur();if(b&&t>=10)b.p=t;save();render();msg("Настройки сохранены.")});
+  const g=parseInt($("goalIn").value,10);if(g>=5)S.goal=g;
+  const b=cur();let note="Настройки сохранены.";
+  if(b){const s=parseInt($("startIn").value,10),e=parseInt($("endIn").value,10);
+    if(s>=1&&e>s){const shift=s-b.s;b.s=s;b.e=e;
+      // страницы, введённые раньше «от начала книги», переводим в нумерацию издания
+      if(S.page!=null&&S.page<s-1){S.page+=shift;const L=S.log[today];
+        if(L&&L.book===b.t){if(L.startPage!=null)L.startPage+=shift;if(L.stopPage!=null)L.stopPage+=shift}
+        note="Сохранено. Ваша отметка пересчитана: сейчас стр. "+S.page+"."}}
+    else if(!isNaN(s)||!isNaN(e))note="Последняя страница должна быть больше первой."}
+  save();render();msg(note)});
 $("btnCopy").onclick=async()=>{const ta=$("backup");try{await navigator.clipboard.writeText(ta.value);msg("Копия скопирована — вставьте её в заметки.")}catch(e){ta.select();msg("Текст выделен — скопируйте его.")}};
-$("btnRestore").onclick=()=>{try{const d=JSON.parse($("backup").value);if(!Array.isArray(d.books))throw 0;S=d;save();render();msg("Данные восстановлены.")}catch(e){msg("Это не похоже на копию формуляра.")}};
+$("btnRestore").onclick=()=>{try{const d=JSON.parse($("backup").value);if(!Array.isArray(d.books))throw 0;S=migrate(d);save();render();msg("Данные восстановлены.")}catch(e){msg("Это не похоже на копию формуляра.")}};
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
 render();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
