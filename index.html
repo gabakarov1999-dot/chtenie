@@ -93,14 +93,41 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;pad
 .lad-axis{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 .check{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:15px;color:var(--ink)}
 .check input{width:auto}
+.tabs{display:flex;gap:6px;position:sticky;top:env(safe-area-inset-top,0);z-index:5;background:var(--bg);padding:6px 0}
+.tabs button{flex:1 1 0;border-color:var(--line);font-weight:700}
+.tabs button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+#viewMain,#viewHow{display:flex;flex-direction:column;gap:20px}
+[hidden]{display:none!important}
+.theses{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.card p{margin:0 0 10px}
+.timer{font-family:var(--f-mono);font-size:44px;text-align:center;margin:8px 0}
+.paces{margin:10px 0 0;padding:0;list-style:none;font-size:14px}
+.paces li{padding:6px 0;border-top:1px dashed var(--line);display:flex;justify-content:space-between;gap:10px}
+.paces li span:first-child{min-width:0}
+.paces li span:last-child{font-family:var(--f-mono);white-space:nowrap;color:var(--muted)}
+select{font:inherit;font-size:16px;padding:9px 8px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);width:100%}
+.pacer{font-family:var(--f-display);font-size:19px;line-height:1.7;margin:12px 0;padding:14px;background:var(--soft);border-radius:4px;min-height:180px}
+.pacer span{color:var(--muted);transition:color .15s,background .15s}
+.pacer span.cur{color:var(--ink);background:var(--card);border-radius:2px}
+.pacer span.done{color:var(--line)}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opts button{text-align:left;font-weight:400}
+.opts button.right{border-color:var(--ok);color:var(--ok);font-weight:700}
+.opts button.wrong{border-color:var(--stamp);color:var(--stamp)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="eyebrow">Читательский формуляр</div>
-    <h1>Каждый день — норма страниц</h1>
+    <h1 id="viewTitle">Каждый день — норма страниц</h1>
   </header>
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" id="tabMain" class="on" aria-selected="true">Формуляр</button>
+    <button type="button" role="tab" id="tabHow" aria-selected="false">Как читать</button>
+  </nav>
+
+<div id="viewMain">
 
   <section class="card today">
     <div id="stamp" class="stamp" hidden></div>
@@ -200,6 +227,89 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;pad
   </section>
 </div>
 
+<div id="viewHow" hidden>
+  <section class="card">
+    <h2>С. И. Поварнин. «Как читать книги» (1924)</h2>
+    <p class="note" style="margin-top:0">Главные советы книги, пересказ своими словами.</p>
+    <ol class="theses">
+      <li><b>Способ чтения зависит от цели.</b> Одну книгу просматривают, другую читают для отдыха, третью изучают. Сначала решите, зачем вы её открыли.</li>
+      <li><b>Настоящее чтение — медленное и вдумчивое.</b> Быстрое чтение годится для предварительного просмотра. Понять книгу можно только вдумчивым чтением.</li>
+      <li><b>Сначала познакомьтесь с книгой.</b> Посмотрите автора, год, предисловие, оглавление. Так вы заранее знаете, чего ждать.</li>
+      <li><b>Читайте «с вопросами».</b> О чём это? Почему герой так поступил? Что хочет сказать автор? Чтение должно быть диалогом с автором.</li>
+      <li><b>Добивайтесь понимания каждой мысли.</b> Трудное место перечитайте, непонятное слово выясните, не перескакивайте дальше.</li>
+      <li><b>Читайте с карандашом.</b> Пометки, выписки, свои мысли на полях. Записанная мысль не потеряется.</li>
+      <li><b>После главы — остановитесь.</b> Перескажите себе главную мысль в одну-две фразы. Не можете — значит, глава не понята.</li>
+      <li><b>Оценивайте прочитанное.</b> Согласны ли вы с автором? Где он убедителен, где нет? Отличайте факты от оценок.</li>
+      <li><b>Лучшие книги перечитывают.</b> При втором чтении видно то, что ускользнуло в первый раз.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Про скорость и проговаривание</h2>
+    <p>Медленное чтение с образами — не недостаток. Именно его Поварнин считает настоящим чтением, особенно для художественной литературы.</p>
+    <p><b>Проговаривание в уме.</b> Внутреннюю речь при чтении полностью убрать нельзя, она помогает понимать текст. Исследования чтения показывают: когда её подавляют, понимание падает. Тренировать «чтение без проговаривания» не нужно.</p>
+    <p><b>«Не вести взглядом всю строку».</b> Глаз и так двигается скачками, а чётко видит лишь несколько букв вокруг точки взгляда. Обещания курсов скорочтения «читать страницу одним взглядом» наука не подтверждает: при такой скорости понимание резко падает.</p>
+    <p><b>Что реально ускоряет без потери смысла:</b></p>
+    <ul class="theses">
+      <li>меньше возвратов назад — это главная потеря времени у многих читателей; поможет тренажёр ниже;</li>
+      <li>сосредоточенность: телефон в другой комнате, 25–30 минут без перерыва;</li>
+      <li>сама практика: с каждой прочитанной книгой растут словарный запас и знание эпохи, и чтение идёт легче;</li>
+      <li>предварительный просмотр главы (совет Поварнина): знаешь, куда идёт мысль, — читаешь увереннее.</li>
+    </ul>
+    <p class="note">Ориентир: художественную прозу взрослые обычно читают со скоростью около 200–300 слов в минуту. Это примерно 30–45 страниц в час. Медленнее — нормально, если вы понимаете и представляете прочитанное.</p>
+  </section>
+
+  <section class="card">
+    <h2>Замер темпа на своей книге</h2>
+    <p class="note" style="margin-top:0">Откройте книгу, нажмите «Старт» и читайте как обычно, хотя бы 10 минут. Потом нажмите «Стоп» и укажите, сколько страниц прочитали.</p>
+    <div class="timer" id="timer">00:00</div>
+    <div class="row">
+      <button type="button" class="primary" id="btnTimer">Старт</button>
+    </div>
+    <form id="paceForm" hidden>
+      <label for="pacePages">Сколько страниц прочитано<input id="pacePages" type="number" min="1" step="0.5"></label>
+      <button type="submit">Записать замер</button>
+    </form>
+    <div class="goal" id="paceLine"></div>
+    <ol class="paces" id="paceList"></ol>
+  </section>
+
+  <section class="card">
+    <h2>Тренажёр «Ровный темп»</h2>
+    <p class="note" style="margin-top:0">Фразы подсвечиваются одна за другой с выбранной скоростью. Читайте подсвеченное и не возвращайтесь назад. Проговаривать в уме можно. Начните со своей скорости и прибавляйте по 10 слов в минуту, когда ответ на вопрос в конце даётся легко.</p>
+    <div class="row">
+      <label for="wpmIn">Скорость, слов в минуту<input id="wpmIn" type="number" min="60" max="600" step="10" value="150"></label>
+      <label for="txtSel">Текст
+        <select id="txtSel"></select></label>
+    </div>
+    <div class="pacer" id="pacer" aria-live="off"></div>
+    <div class="row">
+      <button type="button" class="primary" id="btnPacer">Начать</button>
+    </div>
+    <div id="quiz" hidden>
+      <p id="qText" style="font-weight:700"></p>
+      <div class="opts" id="qOpts"></div>
+    </div>
+    <div class="msg" id="pacerMsg"></div>
+  </section>
+
+  <section class="card">
+    <h2>После главы — по Поварнину</h2>
+    <p class="note" style="margin-top:0">Ответьте себе на три вопроса и запишите короткую заметку. Две минуты в день, а понимание книги заметно растёт.</p>
+    <ol class="theses">
+      <li>О чём глава — одной фразой?</li>
+      <li>Какая картина или сцена запомнилась ярче всего?</li>
+      <li>Согласен ли я с автором или героем? Почему?</li>
+    </ol>
+    <form id="noteForm">
+      <label for="noteIn">Заметка к текущей книге<textarea id="noteIn" style="font-family:var(--f-body);font-size:15px"></textarea></label>
+      <button type="submit">Сохранить заметку</button>
+    </form>
+    <ol class="paces" id="noteList"></ol>
+  </section>
+</div>
+</div>
+
 <script>
 const KEY="formular-v1";
 const DEF_BOOKS=[
@@ -271,7 +381,7 @@ function render(){
     const base=e&&e.startPage!=null?e.startPage:(S.page==null?b.s-1:S.page);
     $("goalLine").innerHTML=S.page==null
       ?"Укажите страницу, на которой вы сейчас (номер как в книге), и нажмите «Отметить прочитанное»."
-      :"Норма: <b>"+S.goal+" стр.</b> — до стр. <b>"+Math.min(b.e,base+S.goal)+"</b> · до конца ≈ "+Math.ceil(Math.max(0,b.e-S.page)/S.goal)+" дн.";
+      :"Норма: <b>"+S.goal+" стр.</b> — до стр. <b>"+Math.min(b.e,base+S.goal)+"</b> · до конца ≈ "+Math.ceil(Math.max(0,b.e-S.page)/S.goal)+" дн."+(typeof pph==="function"&&pph()?" · по вашему темпу ≈ "+Math.round(S.goal/pph()*60)+" мин":"");
     $("stopPage").placeholder=S.page==null?"напр. "+(b.s+33):String(Math.min(b.e,base+S.goal));
     $("startIn").value=b.s;$("endIn").value=b.e;
   }else{
@@ -392,6 +502,82 @@ $("setForm").addEventListener("submit",ev=>{ev.preventDefault();
   save();render();msg(note)});
 $("btnCopy").onclick=async()=>{const ta=$("backup");try{await navigator.clipboard.writeText(ta.value);msg("Копия скопирована — вставьте её в заметки.")}catch(e){ta.select();msg("Текст выделен — скопируйте его.")}};
 $("btnRestore").onclick=()=>{try{const d=JSON.parse($("backup").value);if(!Array.isArray(d.books))throw 0;S=migrate(d);ensurePlan();save();render();msg("Данные восстановлены.")}catch(e){msg("Это не похоже на копию формуляра.")}};
+/* ---------- Вкладка «Как читать» ---------- */
+function showView(how){
+  $("viewMain").hidden=how;$("viewHow").hidden=!how;
+  $("tabMain").classList.toggle("on",!how);$("tabHow").classList.toggle("on",how);
+  $("tabMain").setAttribute("aria-selected",String(!how));$("tabHow").setAttribute("aria-selected",String(how));
+  $("viewTitle").textContent=how?"Как читать книги":"Каждый день — норма страниц";
+  try{sessionStorage.setItem("tab",how?"how":"main")}catch(e){}
+  if(how)renderHow();window.scrollTo(0,0)}
+$("tabMain").onclick=()=>showView(false);$("tabHow").onclick=()=>showView(true);
+
+function pph(){const p=(S.paces||[]).slice(-3);if(!p.length)return null;
+  const pages=p.reduce((a,x)=>a+x.pages,0),min=p.reduce((a,x)=>a+x.min,0);return pages/min*60}
+function renderHow(){
+  const v=pph();
+  $("paceLine").innerHTML=v
+    ?"Ваш темп: <b>"+Math.round(v)+" стр. в час</b> (≈ "+Math.round(v*270/60)+" слов в минуту). Норма "+S.goal+" стр. займёт около <b>"+Math.round(S.goal/v*60)+" минут</b>."
+    :"Замеров пока нет. Сделайте первый — так станет понятно, сколько времени нужно на дневную норму.";
+  const pl=$("paceList");pl.innerHTML="";
+  (S.paces||[]).slice(-6).reverse().forEach(p=>{const li=document.createElement("li");
+    const a=document.createElement("span");a.textContent=new Date(p.at).toLocaleDateString("ru-RU",{day:"numeric",month:"short"})+" · "+p.pages+" стр. за "+Math.round(p.min)+" мин";
+    const b=document.createElement("span");b.textContent=Math.round(p.pages/p.min*60)+" стр./ч";li.append(a,b);pl.appendChild(li)});
+  if(v&&!pacerRun&&!$("wpmIn").dataset.touched)$("wpmIn").value=Math.max(60,Math.round(v*270/60/10)*10);
+  const nl=$("noteList");nl.innerHTML="";
+  (S.notes||[]).slice(-8).reverse().forEach(n=>{const li=document.createElement("li");
+    const a=document.createElement("span");a.textContent=n.text;
+    const b=document.createElement("span");b.textContent="«"+n.book+"», "+new Date(n.at).toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
+    li.style.flexDirection="column";li.append(a,b);nl.appendChild(li)});
+}
+// секундомер
+let tStart=null,tInt=null;
+$("btnTimer").onclick=()=>{
+  if(tStart==null){tStart=Date.now();$("btnTimer").textContent="Стоп";$("paceForm").hidden=true;
+    tInt=setInterval(()=>{const s=Math.floor((Date.now()-tStart)/1000);$("timer").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")},500)}
+  else{clearInterval(tInt);$("btnTimer").textContent="Заново";$("paceForm").hidden=false;$("paceForm").dataset.min=(Date.now()-tStart)/60000;tStart=null;$("pacePages").focus()}};
+$("paceForm").addEventListener("submit",ev=>{ev.preventDefault();
+  const pages=parseFloat($("pacePages").value),min=parseFloat($("paceForm").dataset.min);
+  if(!(pages>0)||!(min>=1)){$("paceLine").textContent="Читайте хотя бы минуту и укажите число страниц.";return}
+  (S.paces=S.paces||[]).push({at:Date.now(),pages,min});save();$("pacePages").value="";$("paceForm").hidden=true;$("timer").textContent="00:00";$("btnTimer").textContent="Старт";renderHow();render()});
+// тренажёр: тексты написаны специально для тренажёра
+const TEXTS=[
+ {t:"Станция в степи",x:"Поезд пришёл на маленькую станцию под утро. Над степью ещё висел туман, и водонапорная башня казалась серой тенью. Начальник станции, пожилой человек в шинели без пуговиц, вышел на перрон с фонарём. Он посмотрел на часы, потом на небо, потом на паровоз, будто проверял, всё ли на месте. Из вагона спрыгнул молодой инженер с деревянным чемоданом. Он приехал строить элеватор, хотя никто здесь ещё не знал, что это слово значит. Начальник станции долго разглядывал чертежи, которые инженер развернул прямо на лавке. Потом сказал, что зерно здесь всегда возили на подводах до реки, а река далеко. Инженер улыбнулся и ответил, что через год подводы не понадобятся. Туман тем временем поднялся, и стало видно, как до самого горизонта тянется жёлтое поле.",
+  q:"Что приехал строить инженер?",o:["Мост через реку","Элеватор","Водонапорную башню","Новую станцию"],a:1},
+ {t:"Письмо с фронта",x:"Письмо было сложено треугольником и пахло махоркой. Мать долго не решалась его открыть и держала на коленях, разглаживая ладонью края. Сын писал коротко: жив, здоров, кормят хорошо, сапоги дали новые. О боях — ни слова. Только в конце, будто между прочим, он вспомнил яблоню у крыльца и попросил, чтобы её не рубили, даже если засохнет. Мать перечитала эту строчку несколько раз. Яблоню посадил отец в тот год, когда сын пошёл в школу. Она вышла во двор и долго стояла под голыми ветками. Потом принесла ведро воды и полила корни, хотя на дворе был октябрь и поливать было незачем. Соседка видела это из окна и ничего не спросила.",
+  q:"О чём сын попросил в конце письма?",o:["Прислать тёплые вещи","Не рубить яблоню у крыльца","Написать отцу","Продать корову"],a:1},
+ {t:"Совещание в цехе",x:"Совещание назначили на семь утра, до начала смены. Мастер Кравцов пришёл первым и сел у окна, откуда был виден весь цех. Молодые рабочие собирались шумно, старые — молча. Директор говорил о плане, о сроках, о том, что новый станок простаивает уже третью неделю. Все знали почему: никто не умел на нём работать, а инструкция была на немецком. Кравцов слушал и рисовал что-то карандашом на папиросной коробке. Когда директор спросил, есть ли предложения, мастер поднял руку и сказал, что за неделю разберётся сам, если ему дадут двух учеников и не будут торопить. Директор хотел возразить, но посмотрел на коробку с рисунком и согласился. На коробке была схема станка, нарисованная по памяти.",
+  q:"Почему простаивал новый станок?",o:["Не хватало электричества","Не было запчастей","Никто не умел на нём работать","Его не успели установить"],a:2}
+];
+TEXTS.forEach((t,i)=>{const o=document.createElement("option");o.value=i;o.textContent=t.t+" ("+t.x.split(/\s+/).length+" слов)";$("txtSel").appendChild(o)});
+let pacerRun=null;
+function prepPacer(){const T=TEXTS[$("txtSel").value];const box=$("pacer");box.innerHTML="";
+  T.x.match(/[^.!?]+[.!?]+/g).forEach(s=>{const sp=document.createElement("span");sp.textContent=s.trim()+" ";box.appendChild(sp)});
+  $("quiz").hidden=true;$("pacerMsg").textContent=""}
+$("txtSel").onchange=prepPacer;
+$("wpmIn").oninput=()=>{$("wpmIn").dataset.touched="1"};
+$("btnPacer").onclick=()=>{
+  if(pacerRun){clearTimeout(pacerRun);pacerRun=null;$("btnPacer").textContent="Начать";return}
+  prepPacer();const wpm=Math.max(60,parseInt($("wpmIn").value,10)||150);
+  const spans=[...$("pacer").children];let i=0;const t0=Date.now();$("btnPacer").textContent="Остановить";
+  const step=()=>{if(i>0)spans[i-1].className="done";
+    if(i>=spans.length){pacerRun=null;$("btnPacer").textContent="Начать ещё раз";askQuiz(wpm);return}
+    spans[i].className="cur";const words=spans[i].textContent.trim().split(/\s+/).length;i++;
+    pacerRun=setTimeout(step,words/wpm*60000)};
+  step()};
+function askQuiz(wpm){const T=TEXTS[$("txtSel").value];$("quiz").hidden=false;$("qText").textContent=T.q;
+  const box=$("qOpts");box.innerHTML="";
+  T.o.forEach((o,k)=>{const b=document.createElement("button");b.type="button";b.textContent=o;
+    b.onclick=()=>{[...box.children].forEach(c=>c.disabled=true);
+      if(k===T.a){b.className="right";$("pacerMsg").textContent="Верно. На "+wpm+" слов в минуту вы понимаете текст — в следующий раз попробуйте "+(wpm+10)+"."}
+      else{b.className="wrong";box.children[T.a].className="right";$("pacerMsg").textContent="Смысл ускользнул — значит, "+wpm+" пока быстро. Снизьте скорость на 10–20 слов: понимание важнее."}
+      (S.drills=S.drills||[]).push({at:Date.now(),wpm,ok:k===T.a});save()};
+    box.appendChild(b)})}
+prepPacer();
+$("noteForm").addEventListener("submit",ev=>{ev.preventDefault();const t=$("noteIn").value.trim();if(!t)return;
+  const b=cur();(S.notes=S.notes||[]).push({at:Date.now(),book:b?b.t:"—",text:t});$("noteIn").value="";save();renderHow()});
+try{if(sessionStorage.getItem("tab")==="how")setTimeout(()=>showView(true),0)}catch(e){}
+
 $("autoIn").addEventListener("change",()=>{$("goalIn").disabled=$("autoIn").checked});
 function boot(){ensurePlan();const m=advancePlan();save();render();if(m)msg(m)}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)boot()});
