@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Формуляр</title>
+<meta name="theme-color" content="#1f2a44">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Формуляр">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+/* Формуляр читателя: одна колонка — сегодня, статистика, режим, история, список книг */
+:root{
+  --bg:#e9ece4; --card:#fafaf5; --ink:#1f2a44; --muted:#5b6474; --line:#c6ccbf;
+  --stamp:#b3261e; --ok:#2f6b3a; --warn:#9a6200; --soft:#dfe4d8;
+  --f-display:"PT Serif",Georgia,"Times New Roman",serif;
+  --f-body:"PT Sans",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"PT Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#13171d; --card:#1b2129; --ink:#e2e5ea; --muted:#9aa3b1; --line:#2f3743;
+  --stamp:#e2665c; --ok:#74c283; --warn:#e2a84f; --soft:#232a34; color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-size:28px;line-height:1.1;margin:4px 0 0}
+h2{font-family:var(--f-display);font-size:20px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px}
+.today{position:relative;overflow:hidden}
+.date{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.book{font-family:var(--f-display);font-size:22px;font-weight:700;margin:6px 0 2px;padding-right:90px}
+.author{color:var(--muted)}
+.bar{height:8px;background:var(--soft);border-radius:4px;margin:14px 0 6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink);width:0;transition:width .4s}
+.nums{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.goal{margin-top:14px;padding:10px 12px;background:var(--soft);border-radius:4px;font-size:15px}
+.goal b{font-family:var(--f-mono)}
+.stamp{position:absolute;top:14px;right:12px;transform:rotate(-8deg);border:2px solid currentColor;border-radius:4px;padding:2px 8px;font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.st-done{color:var(--ok)} .st-evening,.st-partial{color:var(--warn)} .st-missed{color:var(--stamp)}
+form{display:flex;flex-direction:column;gap:10px;margin:14px 0 0}
+label{font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+input{font:inherit;font-size:17px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink);width:100%}
+input[type=number]{font-family:var(--f-mono)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 0;min-width:120px}
+button{font:inherit;font-weight:700;padding:11px 12px;border-radius:4px;border:1px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
+button.primary{background:var(--ink);color:var(--card)}
+button.warn{border-color:var(--warn);color:var(--warn)}
+button.miss{border-color:var(--stamp);color:var(--stamp)}
+button.ghost{border-color:var(--line);font-weight:400;padding:6px 9px;font-size:14px}
+.msg{font-size:14px;color:var(--muted);min-height:1.2em}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px}
+.stat .v{font-family:var(--f-mono);font-size:24px}
+.stat .k{font-size:13px;color:var(--muted)}
+.sched{list-style:none;margin:0;padding:0}
+.sched li{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:10px 0;border-top:1px dashed var(--line)}
+.sched li:first-child{border-top:0}
+.sched time{font-family:var(--f-mono);font-weight:700}
+.sched small{display:block;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{aspect-ratio:1;border-radius:4px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.day.done{background:var(--ok);border-color:var(--ok);color:var(--card)}
+.day.partial,.day.evening{border:2px solid var(--warn);color:var(--warn)}
+.day.missed{border:2px solid var(--stamp);color:var(--stamp)}
+.day.today{outline:2px solid var(--ink);outline-offset:1px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:var(--c)}
+ol.books{margin:0;padding:0;list-style:none}
+ol.books li{display:grid;grid-template-columns:1fr auto;gap:6px 10px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+ol.books li.cur .t{font-weight:700}
+ol.books li.fin .t{color:var(--muted);text-decoration:line-through}
+ol.books .t{min-width:0}
+ol.books .t small{display:block;font-weight:400;color:var(--muted)}
+ol.books .t .d{font-family:var(--f-mono);font-size:12px}
+ol.books .acts{display:flex;gap:4px}
+.note{font-size:13px;color:var(--muted)}
+details summary{cursor:pointer;color:var(--muted);font-size:15px;padding:4px 0}
+textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;padding:8px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink)}
+:focus-visible{outline:3px solid var(--stamp);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Читательский формуляр</div>
+    <h1>Каждый день — норма страниц</h1>
+  </header>
+
+  <section class="card today">
+    <div id="stamp" class="stamp" hidden></div>
+    <div class="date" id="todayDate"></div>
+    <div class="book" id="bookTitle"></div>
+    <div class="author" id="bookAuthor"></div>
+    <div class="bar"><i id="barFill"></i></div>
+    <div class="nums"><span id="pageNow"></span><span id="pageTotal"></span></div>
+    <div class="goal" id="goalLine"></div>
+    <form id="readForm">
+      <label for="stopPage">Остановился на странице
+        <input id="stopPage" type="number" inputmode="numeric" min="0"></label>
+      <button type="submit" class="primary">Отметить прочитанное</button>
+      <div class="row">
+        <button type="button" class="warn" id="btnEvening">Переношу на вечер</button>
+        <button type="button" class="miss" id="btnMissed">Сегодня не вышло</button>
+      </div>
+      <div class="msg" id="msg"></div>
+    </form>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="v" id="streak">0</div><div class="k">дней подряд</div></div>
+    <div class="stat"><div class="v" id="week">0</div><div class="k">стр. за 7 дней</div></div>
+    <div class="stat"><div class="v" id="finished">0</div><div class="k">книг прочитано</div></div>
+  </section>
+
+  <section class="card">
+    <h2>Последние три недели</h2>
+    <div class="grid" id="grid"></div>
+    <div class="legend">
+      <span style="--c:var(--ok)">норма</span>
+      <span style="--c:var(--warn)">меньше нормы / на вечер</span>
+      <span style="--c:var(--stamp)">пропуск</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Мои книги</h2>
+    <ol class="books" id="books"></ol>
+    <form id="addForm">
+      <div class="row">
+        <label for="newT">Название<input id="newT" required placeholder="напр. Бруски"></label>
+      </div>
+      <div class="row">
+        <label for="newA">Автор, год<input id="newA" placeholder="Фёдор Панфёров, 1928"></label>
+        <label for="newP" style="flex:0 0 110px;min-width:0">Страниц<input id="newP" type="number" min="10" placeholder="400"></label>
+      </div>
+      <button type="submit">Добавить книгу в конец списка</button>
+    </form>
+    <p class="note">Стрелки меняют порядок, ✕ убирает книгу. Текущая — первая непрочитанная в списке. Даты окончания рассчитаны по вашей норме.</p>
+  </section>
+
+  <section class="card">
+    <h2>Режим дня</h2>
+    <ul class="sched">
+      <li><time>13:00</time><div>Обед — 10 страниц<small>Не вышло — «Переношу на вечер».</small></div></li>
+      <li><time>19:30</time><div>Основное чтение<small>Остаток нормы.</small></div></li>
+      <li><time>22:00</time><div>Контроль<small>Отметьте день. Норма не выполнена — дочитайте до сна.</small></div></li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>Настройки и резервная копия</summary>
+      <form id="setForm">
+        <div class="row">
+          <label for="goalIn">Норма, стр. в день<input id="goalIn" type="number" min="5" max="300"></label>
+          <label for="totalIn">Страниц в текущей книге<input id="totalIn" type="number" min="10"></label>
+        </div>
+        <button type="submit">Сохранить настройки</button>
+      </form>
+      <form id="backupForm">
+        <label for="backup">Резервная копия (скопируйте и сохраните в заметки; чтобы восстановить — вставьте и нажмите «Восстановить»)
+          <textarea id="backup" spellcheck="false"></textarea></label>
+        <div class="row">
+          <button type="button" id="btnCopy">Скопировать копию</button>
+          <button type="button" id="btnRestore">Восстановить</button>
+        </div>
+      </form>
+    </details>
+  </section>
+</div>
+
+<script>
+const KEY="formular-v1";
+const DEF_BOOKS=[
+ ["Железный поток","Александр Серафимович, 1924",220],
+ ["Журбины","Всеволод Кочетов, 1952",450],
+ ["Братья Ершовы","Всеволод Кочетов, 1958",420],
+ ["Секретарь обкома","Всеволод Кочетов, 1961",450],
+ ["Чего же ты хочешь?","Всеволод Кочетов, 1969",300],
+ ["Чапаев","Дмитрий Фурманов, 1923",300],
+ ["Разгром","Александр Фадеев, 1927",200],
+ ["Как закалялась сталь","Николай Островский, 1934",400],
+ ["Волоколамское шоссе","Александр Бек, 1944",300],
+ ["Повесть о настоящем человеке","Борис Полевой, 1946",350],
+ ["Молодая гвардия","Александр Фадеев, 1951",600],
+ ["Далеко от Москвы","Василий Ажаев, 1948",750],
+ ["Поднятая целина","Михаил Шолохов, 1959",700],
+ ["Живые и мёртвые","Константин Симонов, 1959",500],
+ ["Тихий Дон","Михаил Шолохов, 1940",1500]
+];
+const uid=()=>Math.random().toString(36).slice(2,9);
+function fresh(){return{goal:35,page:null,books:DEF_BOOKS.map(([t,a,p])=>({id:uid(),t,a,p,fin:null})),log:{}}}
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){S=fresh()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){msg("Не удалось сохранить в памяти телефона.")}}
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+
+const $=id=>document.getElementById(id);
+const ymd=d=>{const z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())};
+let today=ymd(new Date());
+const cur=()=>S.books.find(b=>!b.fin)||null;
+function msg(t){$("msg").textContent=t}
+
+function render(){
+  today=ymd(new Date());
+  $("todayDate").textContent=new Date().toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const b=cur(),e=S.log[today];
+  if(b){
+    $("bookTitle").textContent="«"+b.t+"»";$("bookAuthor").textContent=b.a||"";
+    $("pageNow").textContent=S.page==null?"страница не указана":"стр. "+S.page;
+    $("pageTotal").textContent="из "+b.p;
+    $("barFill").style.width=S.page?Math.min(100,S.page/b.p*100)+"%":"0";
+    const base=e&&e.startPage!=null?e.startPage:(S.page||0);
+    $("goalLine").innerHTML=S.page==null
+      ?"Укажите страницу, на которой вы сейчас, и нажмите «Отметить прочитанное»."
+      :"Норма: <b>"+S.goal+" стр.</b> — до стр. <b>"+Math.min(b.p,base+S.goal)+"</b> · до конца книги ≈ "+Math.ceil(Math.max(0,b.p-S.page)/S.goal)+" дн.";
+    $("stopPage").placeholder=S.page==null?"напр. 74":String(Math.min(b.p,base+S.goal));
+    $("totalIn").value=b.p;
+  }else{
+    $("bookTitle").textContent="Список прочитан";$("bookAuthor").textContent="Добавьте новые книги ниже.";
+    $("pageNow").textContent="";$("pageTotal").textContent="";$("goalLine").textContent="";$("barFill").style.width="100%";
+  }
+  $("goalIn").value=S.goal;
+  const st=$("stamp");
+  if(e){st.hidden=false;st.className="stamp st-"+e.status;
+    st.textContent={done:"норма ✓",partial:(e.pages||0)+" стр.",evening:"на вечер",missed:"пропуск"}[e.status]}
+  else st.hidden=true;
+  // stats
+  let streak=0;const d=new Date();
+  if(!(S.log[today]&&S.log[today].status==="done"))d.setDate(d.getDate()-1);
+  while(S.log[ymd(d)]&&S.log[ymd(d)].status==="done"){streak++;d.setDate(d.getDate()-1)}
+  $("streak").textContent=streak;
+  const w0=new Date();w0.setDate(w0.getDate()-6);const w0s=ymd(w0);let wk=0;
+  for(const k in S.log)if(k>=w0s)wk+=S.log[k].pages||0;
+  $("week").textContent=wk;
+  $("finished").textContent=S.books.filter(x=>x.fin).length;
+  // grid
+  const first=Object.keys(S.log).sort()[0];
+  const g=$("grid");g.innerHTML="";
+  for(let i=20;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);const k=ymd(x);
+    let s=S.log[k]?S.log[k].status:"";if(!s&&i>0&&first&&k>first)s="missed";
+    const c=document.createElement("div");c.className="day "+s+(i===0?" today":"");c.textContent=x.getDate();g.appendChild(c)}
+  // books
+  const ol=$("books");ol.innerHTML="";
+  let acc=0;const now=new Date();const curB=cur();
+  S.books.forEach((bk,i)=>{
+    const li=document.createElement("li");
+    const t=document.createElement("div");t.className="t";t.textContent="«"+bk.t+"»";
+    const sm=document.createElement("small");
+    let dt="";
+    if(bk.fin){li.className="fin";dt="прочитана "+new Date(bk.fin).toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"2-digit"})}
+    else{acc+=bk===curB?Math.max(0,bk.p-(S.page||0)):bk.p;
+      const f=new Date(now);f.setDate(f.getDate()+Math.ceil(acc/S.goal));
+      dt="≈ "+f.toLocaleDateString("ru-RU",{day:"numeric",month:"short",year:"2-digit"});
+      if(bk===curB)li.className="cur"}
+    sm.textContent=(bk.a?bk.a+" · ":"")+bk.p+" стр. · ";
+    const ds=document.createElement("span");ds.className="d";ds.textContent=dt;sm.appendChild(ds);t.appendChild(sm);
+    const acts=document.createElement("div");acts.className="acts";
+    const mk=(lbl,aria,fn)=>{const bt=document.createElement("button");bt.type="button";bt.className="ghost";bt.textContent=lbl;bt.setAttribute("aria-label",aria);bt.onclick=fn;acts.appendChild(bt)};
+    mk("↑","Выше",()=>move(i,-1));mk("↓","Ниже",()=>move(i,1));mk("✕","Убрать",()=>remove(i));
+    li.append(t,acts);ol.appendChild(li)});
+  $("backup").value=JSON.stringify(S);
+}
+function move(i,dir){const j=i+dir;if(j<0||j>=S.books.length)return;
+  const wasCur=cur();[S.books[i],S.books[j]]=[S.books[j],S.books[i]];
+  if(cur()!==wasCur)S.page=0;save();render()}
+let pendingRemove=null;
+function remove(i){const b=S.books[i];
+  if(pendingRemove!==b.id){pendingRemove=b.id;msg("Нажмите ✕ ещё раз, чтобы убрать «"+b.t+"».");
+    document.querySelector(".today").scrollIntoView({behavior:"smooth"});return}
+  pendingRemove=null;const wasCur=cur()===b;S.books.splice(i,1);if(wasCur)S.page=0;save();render();msg("«"+b.t+"» убрана из списка.")}
+
+$("readForm").addEventListener("submit",ev=>{ev.preventDefault();
+  const b=cur();if(!b)return;
+  const n=parseInt($("stopPage").value,10);
+  if(isNaN(n)){msg("Укажите страницу, на которой остановились.");return}
+  const prev=S.log[today]||{};
+  if(S.page==null&&prev.startPage==null){S.page=n;save();render();$("stopPage").value="";msg("Записал: сейчас стр. "+n+". Норма считается от неё.");return}
+  const startPage=prev.startPage!=null?prev.startPage:(S.page||0);
+  const pages=Math.max(0,n-startPage)+(prev.carry||0);
+  const status=pages>=S.goal?"done":"partial";
+  let note="";S.page=n;
+  const entry={status,pages,startPage,stopPage:n,book:b.t,goal:S.goal};
+  if(n>=b.p){b.fin=Date.now();S.page=0;entry.carry=pages;entry.startPage=0;
+    const nx=cur();note=nx?" «"+b.t+"» дочитана — дальше «"+nx.t+"».":" Список прочитан!"}
+  S.log[today]=entry;save();render();$("stopPage").value="";
+  msg(status==="done"?"Норма выполнена: "+pages+" стр."+note:"Записано "+pages+" стр. До нормы ещё "+(S.goal-pages)+"."+note)});
+$("btnEvening").onclick=()=>{const p=S.log[today];if(p&&p.status==="done"){msg("Сегодня норма уже выполнена.");return}
+  S.log[today]={...(p||{}),status:"evening",pages:p?p.pages||0:0,startPage:p&&p.startPage!=null?p.startPage:(S.page||0)};save();render();msg("Перенесено на вечер.")};
+$("btnMissed").onclick=()=>{const p=S.log[today];if(p&&p.status==="done"){msg("Сегодня норма уже выполнена.");return}
+  S.log[today]={...(p||{}),status:"missed",pages:p?p.pages||0:0};save();render();msg("Записан пропуск. Завтра — та же норма.")};
+$("addForm").addEventListener("submit",ev=>{ev.preventDefault();
+  const t=$("newT").value.trim();if(!t)return;
+  S.books.push({id:uid(),t,a:$("newA").value.trim(),p:parseInt($("newP").value,10)||300,fin:null});
+  $("newT").value=$("newA").value=$("newP").value="";save();render()});
+$("setForm").addEventListener("submit",ev=>{ev.preventDefault();
+  const g=parseInt($("goalIn").value,10),t=parseInt($("totalIn").value,10);
+  if(g>=5)S.goal=g;const b=cur();if(b&&t>=10)b.p=t;save();render();msg("Настройки сохранены.")});
+$("btnCopy").onclick=async()=>{const ta=$("backup");try{await navigator.clipboard.writeText(ta.value);msg("Копия скопирована — вставьте её в заметки.")}catch(e){ta.select();msg("Текст выделен — скопируйте его.")}};
+$("btnRestore").onclick=()=>{try{const d=JSON.parse($("backup").value);if(!Array.isArray(d.books))throw 0;S=d;save();render();msg("Данные восстановлены.")}catch(e){msg("Это не похоже на копию формуляра.")}};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+render();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
