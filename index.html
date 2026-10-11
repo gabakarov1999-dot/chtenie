@@ -84,6 +84,15 @@ ol.books .acts{display:flex;gap:4px}
 details summary{cursor:pointer;color:var(--muted);font-size:15px;padding:4px 0}
 textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;padding:8px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--ink)}
 :focus-visible{outline:3px solid var(--stamp);outline-offset:2px}
+.ladder{display:flex;align-items:flex-end;gap:3px;height:120px;margin:12px 0 6px;position:relative}
+.ladder i{flex:1 1 0;min-width:0;background:var(--soft);border-radius:2px 2px 0 0;position:relative}
+.ladder i.past{background:var(--muted)}
+.ladder i.now{background:var(--ink)}
+.ladder .top{position:absolute;left:0;right:0;border-top:2px dashed var(--stamp)}
+.ladder .top span{position:absolute;right:0;top:-18px;font-family:var(--f-mono);font-size:11px;color:var(--stamp);background:var(--card);padding:0 3px}
+.lad-axis{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.check{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:15px;color:var(--ink)}
+.check input{width:auto}
 </style>
 </head>
 <body>
@@ -117,6 +126,14 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;pad
     <div class="stat"><div class="v" id="streak">0</div><div class="k">дней подряд</div></div>
     <div class="stat"><div class="v" id="week">0</div><div class="k">стр. за 7 дней</div></div>
     <div class="stat"><div class="v" id="finished">0</div><div class="k">книг прочитано</div></div>
+  </section>
+
+  <section class="card">
+    <h2>Лестница к Добролюбову</h2>
+    <div id="planLine" class="goal" style="margin-top:0"></div>
+    <div class="ladder" id="ladder"></div>
+    <div class="lad-axis"><span>нед. 1</span><span id="ladEnd"></span></div>
+    <p class="note" id="planNote"></p>
   </section>
 
   <section class="card">
@@ -159,7 +176,11 @@ textarea{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;pad
     <details>
       <summary>Настройки и резервная копия</summary>
       <form id="setForm">
-        <label for="goalIn">Норма, стр. в день<input id="goalIn" type="number" min="5" max="300"></label>
+        <label class="check" for="autoIn"><input id="autoIn" type="checkbox"> Прогрессивная норма (растёт сама каждую неделю)</label>
+        <div class="row">
+          <label for="goalIn">Норма сейчас, стр. в день<input id="goalIn" type="number" min="5" max="300"></label>
+          <label for="maxIn">Цель-потолок, стр. в день<input id="maxIn" type="number" min="20" max="400"></label>
+        </div>
         <p class="note" style="margin:6px 0 0">Текущая книга в вашем издании (если это сборник — укажите страницы именно этого произведения):</p>
         <div class="row">
           <label for="startIn">Начинается со стр.<input id="startIn" type="number" min="1"></label>
@@ -202,6 +223,30 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 function fresh(){return{goal:35,page:null,books:DEF_BOOKS.map(([t,a,p])=>({id:uid(),t,a,s:1,e:p,fin:null})),log:{}}}
 function migrate(d){(d.books||[]).forEach(b=>{if(b.s==null){b.s=1;b.e=b.p||300}delete b.p});return d}
 const len=b=>Math.max(1,b.e-b.s+1);
+/* Прогрессивная норма: неделя 1 — 35 стр.; дальше +5 в неделю, если норма выполнена
+   хотя бы 5 дней из 7; иначе норма держится. Потолок по умолчанию — 100 стр./день. */
+const STEP=5, NEED=5;
+function dayNum(s){const[y,m,d]=s.split("-").map(Number);return Math.round(Date.UTC(y,m-1,d)/864e5)}
+function ensurePlan(){
+  if(!S.plan)S.plan={auto:true,start:ymd(new Date()),base:35,max:100,week:0,hist:[]};
+  if(S.plan.auto&&S.plan.week==null)S.plan.week=0;
+}
+function advancePlan(){
+  const P=S.plan;if(!P||!P.auto)return null;
+  const w=Math.floor((dayNum(ymd(new Date()))-dayNum(P.start))/7);
+  let msgUp=null;
+  while(P.week<w){
+    const ws=dayNum(P.start)+P.week*7;let done=0;
+    for(const k in S.log)if(S.log[k].status==="done"){const n=dayNum(k);if(n>=ws&&n<ws+7)done++}
+    const before=S.goal;
+    if(done>=NEED&&S.goal<P.max)S.goal=Math.min(P.max,S.goal+STEP);
+    P.hist.push({week:P.week+1,goal:before,done});
+    P.week++;
+    msgUp=S.goal>before?"Новая неделя: норма выросла до "+S.goal+" стр. (прошлая неделя — "+done+" из 7 дней).":
+      (S.goal>=P.max?null:"Новая неделя: норма остаётся "+S.goal+" стр. — на прошлой неделе выполнено "+done+" из 7 дней, нужно хотя бы "+NEED+".");
+  }
+  return msgUp;
+}
 let S;
 try{S=migrate(JSON.parse(localStorage.getItem(KEY))||fresh())}catch(e){S=fresh()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){msg("Не удалось сохранить в памяти телефона.")}}
@@ -234,6 +279,28 @@ function render(){
     $("pageNow").textContent="";$("pageTotal").textContent="";$("goalLine").textContent="";$("barFill").style.width="100%";
   }
   $("goalIn").value=S.goal;
+  const P=S.plan;
+  $("autoIn").checked=!!P.auto;$("maxIn").value=P.max;$("goalIn").disabled=!!P.auto;
+  // лестница
+  const weeksLeft=Math.ceil(Math.max(0,P.max-S.goal)/STEP);
+  const curW=(P.week||0)+1, totalW=curW+weeksLeft;
+  if(P.auto){
+    const ws=dayNum(P.start)+P.week*7;let done=0;
+    for(const k in S.log)if(S.log[k].status==="done"){const n=dayNum(k);if(n>=ws&&n<ws+7)done++}
+    const left=ws+7-dayNum(today);
+    $("planLine").innerHTML=S.goal>=P.max
+      ?"Неделя "+curW+" · норма <b>"+S.goal+" стр.</b> — потолок достигнут. Держите темп."
+      :"Неделя "+curW+" · норма <b>"+S.goal+" стр.</b> · выполнено <b>"+done+" из "+NEED+"</b> дней, нужных для подъёма до "+Math.min(P.max,S.goal+STEP)+" стр. (осталось дней в неделе: "+left+")";
+  }else $("planLine").innerHTML="Прогрессивная норма выключена — сейчас <b>"+S.goal+" стр.</b> в день. Включить можно в настройках.";
+  const lad=$("ladder");lad.innerHTML="";
+  const steps=[];(P.hist||[]).forEach(h=>steps.push({g:h.goal,c:"past"}));
+  steps.push({g:S.goal,c:"now"});for(let g=S.goal+STEP;g<=P.max;g+=STEP)steps.push({g,c:""});
+  const top=Math.max(P.max,S.goal);
+  steps.slice(-40).forEach(s=>{const i=document.createElement("i");i.className=s.c;i.style.height=(s.g/top*100)+"%";i.title=s.g+" стр./день";lad.appendChild(i)});
+  const t=document.createElement("div");t.className="top";t.style.bottom="100%";t.innerHTML="<span>"+P.max+" стр./день</span>";t.style.top="0";lad.appendChild(t);
+  $("ladEnd").textContent=S.goal>=P.max?"цель":"≈ нед. "+totalW;
+  const books=Math.round(P.max*365/350);
+  $("planNote").textContent="При "+P.max+" стр. в день — около "+books+" книг по 350 страниц в год. Добролюбов в юности, по распространённым данным, прочитывал около 400 книг в год, но был тогда семинаристом, а не работал с 9 до 6. Цель-потолок можно поднять в настройках.";
   const st=$("stamp");
   if(e){st.hidden=false;st.className="stamp st-"+e.status;
     st.textContent={done:"норма ✓",partial:(e.pages||0)+" стр.",evening:"на вечер",missed:"пропуск"}[e.status]}
@@ -310,7 +377,10 @@ $("addForm").addEventListener("submit",ev=>{ev.preventDefault();
   S.books.push({id:uid(),t,a:$("newA").value.trim(),s,e,fin:null});
   $("newT").value=$("newA").value=$("newS").value=$("newE").value="";save();render()});
 $("setForm").addEventListener("submit",ev=>{ev.preventDefault();
-  const g=parseInt($("goalIn").value,10);if(g>=5)S.goal=g;
+  const wasAuto=S.plan.auto;S.plan.auto=$("autoIn").checked;
+  const mx=parseInt($("maxIn").value,10);if(mx>=20)S.plan.max=mx;
+  if(!S.plan.auto){const g=parseInt($("goalIn").value,10);if(g>=5)S.goal=g}
+  else if(!wasAuto){S.plan.start=ymd(new Date());S.plan.week=0}
   const b=cur();let note="Настройки сохранены.";
   if(b){const s=parseInt($("startIn").value,10),e=parseInt($("endIn").value,10);
     if(s>=1&&e>s){const shift=s-b.s;b.s=s;b.e=e;
@@ -321,9 +391,11 @@ $("setForm").addEventListener("submit",ev=>{ev.preventDefault();
     else if(!isNaN(s)||!isNaN(e))note="Последняя страница должна быть больше первой."}
   save();render();msg(note)});
 $("btnCopy").onclick=async()=>{const ta=$("backup");try{await navigator.clipboard.writeText(ta.value);msg("Копия скопирована — вставьте её в заметки.")}catch(e){ta.select();msg("Текст выделен — скопируйте его.")}};
-$("btnRestore").onclick=()=>{try{const d=JSON.parse($("backup").value);if(!Array.isArray(d.books))throw 0;S=migrate(d);save();render();msg("Данные восстановлены.")}catch(e){msg("Это не похоже на копию формуляра.")}};
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
-render();
+$("btnRestore").onclick=()=>{try{const d=JSON.parse($("backup").value);if(!Array.isArray(d.books))throw 0;S=migrate(d);ensurePlan();save();render();msg("Данные восстановлены.")}catch(e){msg("Это не похоже на копию формуляра.")}};
+$("autoIn").addEventListener("change",()=>{$("goalIn").disabled=$("autoIn").checked});
+function boot(){ensurePlan();const m=advancePlan();save();render();if(m)msg(m)}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)boot()});
+boot();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
